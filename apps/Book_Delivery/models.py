@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from apps.users.models import User
+from apps.users.models import Order
 
 class Restaurant(models.Model):
     """Модель ресторана/кафе"""
@@ -80,7 +80,7 @@ class Order(models.Model):
     )
 
     user = models.ForeignKey(
-        User,
+        Order,
         on_delete=models.PROTECT,
         related_name='orders',
         verbose_name="Пользователь"

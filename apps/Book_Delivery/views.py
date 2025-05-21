@@ -1,67 +1,38 @@
-from rest_framework import status, generics, viewsets
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
-from apps.Book_Delivery.models import Delivery, Process
-from apps.Book_Delivery.serializers import DeliverySerializer, ProcessSerializer
+from django.contrib import admin
+from django.contrib.admin import AdminSite
+from django.utils.translation import gettext_lazy as _
 
 
-@api_view(['GET'])
-def hello_world(request):
-    return Response({'message': 'Hello, world!'})
+class CustomAdminSite(AdminSite):
+    site_header = _("Food Delivery Administration")
+    site_title = _("Food Delivery Admin Portal")
+    index_title = _("Welcome to Food Delivery Admin")
 
 
-class DeliveryList(APIView):
-    def get(self, request):
-        deliveries = Delivery.objects.all()
-        serializer = DeliverySerializer(deliveries, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = DeliverySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+admin_site = CustomAdminSite(name='custom_admin')
 
 
-class ProcessDetailApiView(APIView):
-    def get_object(self, pk):
-        try:
-            return Process.objects.get(pk=pk)
-        except Process.DoesNotExist:
-            return None
 
-    def get(self, request, pk):
-        process = self.get_object(pk)
-        if process is None:
-            return Response(
-                {"error": "Process not found"},
-                status=status.HTTP_404_NOT_FOUND
+class GlobalAdmin(admin.ModelAdmin):
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+
+
+        if 'delete_selected' in actions:
+            actions[ 'delete_selected' ] = (
+                self.delete_selected,
+                'delete_selected',
+                _("Delete selected %(verbose_name_plural)s")
             )
-        serializer = ProcessSerializer(process)
-        return Response(serializer.data)
+        return actions
 
-    def put(self, request, pk):
-        process = self.get_object(pk)
-        if process is None:
-            return Response(
-                {"error": "Process not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        serializer = ProcessSerializer(process, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        process = self.get_object(pk)
-        if process is None:
-            return Response(
-                {"error": "Process not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        process.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def mark_as_active(self, request, queryset):
+        queryset.update(is_active=True)
+
+    mark_as_active.short_description = _("Mark selected as active")
+
+
+
+admin.site = admin_site
+admin.site.register = lambda model, admin_class=None: admin_site.register(model, admin_class or GlobalAdmin)

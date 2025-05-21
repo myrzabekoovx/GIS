@@ -1,28 +1,24 @@
-from rest_framework import generics
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-
-from apps.users.models import CustomUser
-from apps.users.serializers import RegistrationSerializer, LoginSerializer
-
-
-class RegisterView(generics.CreateAPIView):
-    serializer_class = RegistrationSerializer
-    permission_classes = [AllowAny]
-    queryset = CustomUser.objects.all()
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .models import User
+from .serializers import UserSerializer, CustomTokenObtainPairSerializer
 
 
-class LoginView(generics.GenericAPIView):
-    serializer_class = LoginSerializer
-    permission_classes = [AllowAny]
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
-    def post(self, request):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        tokens = serializer.validated_data['tokens']
+    def get_permissions(self):
+        if self.action == 'create':
+            return [ ]
+        return [ IsAuthenticated() ]
 
-        return Response({
-            'email': user.email,
-            'token': tokens,
-        })
+    def get_object(self):
+        if self.kwargs.get('pk') == 'me':
+            return self.request.user
+        return super().get_object()
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

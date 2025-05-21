@@ -1,55 +1,34 @@
-from django.contrib.auth import authenticate
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from apps.users.models import CustomUser
-from rest_framework_simplejwt.tokens import RefreshToken
+User = get_user_model()
 
 
-class RegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CustomUser
-        fields = ('email', 'password')
-
-        def create(self, validated_data):
-            user = CustomUser.objects.create_user(
-                email=validated_data['email'],
-                password=validated_data['password']
-            )
-            return user
-
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-    token = serializers.SerializerMethodField(read_only=True)
-
-    def get_token(self, obj):
-        from rest_framework_simplejwt.tokens import RefreshToken
-        user = obj
-        refresh = RefreshToken.for_user(user)
-
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
+        model = User
+        fields = [ 'id', 'email', 'first_name', 'last_name', 'phone',
+                   'address', 'current_location', 'delivery_address' ]
+        extra_kwargs = {
+            'password': {'write_only': True}
         }
 
-    def validate(self, data):
-        email = data.get('email')
-        password = data.get('password')
-        user = authenticate(email=email, password=password)
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            email=validated_data[ 'email' ],
+            password=validated_data[ 'password' ],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            phone=validated_data.get('phone', ''),
+        )
+        return user
 
-        if not user:
-            raise serializers.ValidationError('Invalid email or password')
-        if not user.is_active:
-            raise serializers.ValidationError('User account is disabled')
-        refresh = RefreshToken.for_user(user)
 
-        return {
-            'user': user,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
-        }
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data.update({
+            'user': UserSerializer(self.user).data
+        })
+        return data
