@@ -1,16 +1,23 @@
-# apps/restaurants/views.py
+from rest_framework import viewsets
+from django.contrib.gis.db.models.functions import Distance
+from .models import Restaurant, MenuItem
+from .serializers import RestaurantSerializer, MenuItemSerializer
 
-from rest_framework import generics
-from .models import Restaurant
-from .serializers import RestaurantSerializer
-from .filters import RestaurantFilter
-from django_filters.rest_framework import DjangoFilterBackend
 
-class RestaurantListView(generics.ListAPIView):
-    queryset = Restaurant.objects.all()
+class RestaurantViewSet(viewsets.ModelViewSet):
     serializer_class = RestaurantSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = RestaurantFilter
 
+    def get_queryset(self):
+        queryset = Restaurant.objects.all()
+        if hasattr(self.request.user, 'location'):
+            queryset = queryset.annotate(
+                distance=Distance('location', self.request.user.location)
+            ).order_by('distance')
+        return queryset
+
+
+class MenuItemViewSet(viewsets.ModelViewSet):
+    serializer_class = MenuItemSerializer
+    queryset = MenuItem.objects.all()
 
 

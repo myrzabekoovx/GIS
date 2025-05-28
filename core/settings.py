@@ -34,15 +34,15 @@ ALLOWED_HOSTS = []
 
 
 MY_APPS = [
-    "apps.Book_Delivery",
     "apps.order",
     "apps.restaurants",
     "apps.users"
 ]
 THIRD_PARTY_APPS =[
     'rest_framework',
-    'rest_framework_simplejwt',
-    'django_filters',
+    'rest_framework_gis',
+    'django.contrib.gis',
+
 ]
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-] + MY_APPS + THIRD_PARTY_APPS
+]+MY_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -139,5 +139,8 @@ REST_FRAMEWORK = {
 #     'BLACKLIST_AFTER_ROTATION': True,
 # }
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'users.User'
+if os.name == 'nt':
+    GDAL_LIBRARY_PATH = r'C:\OSGeo4W\bin\gdal304.dll'
+    GEOS_LIBRARY_PATH = r'C:\OSGeo4W\bin\geos_c.dll'
 

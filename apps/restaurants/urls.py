@@ -1,10 +1,12 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import RestaurantViewSet, MenuItemViewSet
+from rest_framework import viewsets
+from .models import MenuItem
 
-router = DefaultRouter()
-router.register(r'restaurants', RestaurantViewSet)
-router.register(r'menu-items', MenuItemViewSet)
+from .serializers import MenuItemSerializer
+
+class MenuItemViewSet(viewsets.ModelViewSet):
+    queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
 
 urlpatterns = [
     path('', include(router.urls)),

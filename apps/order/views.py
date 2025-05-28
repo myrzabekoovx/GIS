@@ -1,13 +1,15 @@
-# apps/order/views.py
-
-from rest_framework import generics
+from rest_framework import viewsets
 from .models import Order
 from .serializers import OrderSerializer
-from .filters import OrderFilter
-from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.permissions import IsAuthenticated
 
-class OrderListView(generics.ListAPIView):
-    queryset = Order.objects.all()
+
+class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = OrderFilter
+    permission_classes = [ IsAuthenticated ]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
