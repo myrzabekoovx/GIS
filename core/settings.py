@@ -40,8 +40,6 @@ MY_APPS = [
 ]
 THIRD_PARTY_APPS =[
     'rest_framework',
-    'rest_framework_gis',
-    'django.contrib.gis',
 
 ]
 INSTALLED_APPS = [
@@ -140,7 +138,5 @@ REST_FRAMEWORK = {
 # }
 
 AUTH_USER_MODEL = 'users.User'
-if os.name == 'nt':
-    GDAL_LIBRARY_PATH = r'C:\OSGeo4W\bin\gdal304.dll'
-    GEOS_LIBRARY_PATH = r'C:\OSGeo4W\bin\geos_c.dll'
+
 

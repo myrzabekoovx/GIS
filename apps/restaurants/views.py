@@ -1,23 +1,15 @@
 from rest_framework import viewsets
-from django.contrib.gis.db.models.functions import Distance
-from .models import Restaurant, MenuItem
-from .serializers import RestaurantSerializer, MenuItemSerializer
+from .models import Restaurant, MenuItem, Order
+from .serializers import RestaurantSerializer, MenuItemSerializer, OrderSerializer
 
-
-class RestaurantViewSet(viewsets.ModelViewSet):
+class RestaurantViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Restaurant.objects.all()
     serializer_class = RestaurantSerializer
 
-    def get_queryset(self):
-        queryset = Restaurant.objects.all()
-        if hasattr(self.request.user, 'location'):
-            queryset = queryset.annotate(
-                distance=Distance('location', self.request.user.location)
-            ).order_by('distance')
-        return queryset
-
-
 class MenuItemViewSet(viewsets.ModelViewSet):
-    serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
+    serializer_class = MenuItemSerializer
 
-
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer

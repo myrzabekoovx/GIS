@@ -1,22 +1,30 @@
 from rest_framework import serializers
-from .models import Restaurant, MenuItem
+from .models import Restaurant, MenuItem, Order, OrderItem
 
 
 class RestaurantSerializer(serializers.ModelSerializer):
-    distance = serializers.SerializerMethodField()
-
     class Meta:
         model = Restaurant
-        fields = [ 'id', 'name', 'address', 'location', 'distance' ]
-
-    def get_distance(self, obj):
-        request = self.context.get('request')
-        if request and hasattr(request.user, 'location'):
-            return request.user.location.distance(obj.location) * 100  # в метрах
-        return None
+        fields = '__all__'
 
 
 class MenuItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuItem
-        fields = [ 'id', 'name', 'price' ]
+        fields = '__all__'
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    item = MenuItemSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = [ 'item', 'quantity' ]
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [ 'id', 'user', 'items', 'status', 'total_price', 'created_at' ]
